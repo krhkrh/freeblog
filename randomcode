@@ -1,2 +1,122 @@
-asdfasd
-asdfasdf
+using UnityEngine;
+using System.Collections;
+
+public class bosscontrol1 : MonoBehaviour {
+
+	//orbit switch
+
+
+	float wspeed = 90,yspeed = 5;
+	bool up=true;
+
+	Vector3 clockwise = Vector3.up;
+	public bool changingstate = false;
+	float switchrate = 5;
+	Vector3 radiance = Vector3.zero;
+
+
+	bool direction=false,known = false;
+	// Use this for initialization
+	void Start () {
+		StartCoroutine(startorbitalchange());
+	}
+
+
+	public void orbitalswitch(float radius)
+	{
+		radiance = updateradiance(this.transform);
+
+
+
+		if(Mathf.Abs(radius - radiance.magnitude)<0.1f)
+		{
+			known = false;
+			direction = false;
+			changingstate=false;
+			radiance = Vector3.zero;
+			OnOrbitalChangeComlete();
+			return;
+		}
+
+
+		if(!known)
+		{
+			if(radius>radiance.magnitude)
+			{
+				direction = true;
+			}
+			else
+			{
+				direction =false;
+			}
+			known= true;
+		}
+
+		if(direction)
+		{
+			transform.Translate(radiance.normalized*switchrate*Time.deltaTime,Space.World);
+		}
+		else
+		{
+			transform.Translate(-radiance.normalized*switchrate*Time.deltaTime,Space.World);
+		}
+	}
+
+	public static Vector3 updateradiance(Transform t)
+	{
+		Vector3 nradiance = new Vector3(t.position.x,0,t.position.z);
+		return nradiance;
+	}
+
+
+	public  IEnumerator startorbitalchange()
+	{
+		yield return new WaitForSeconds(3.0f);
+		changingstate = true;
+	}
+
+
+	public void OnOrbitalChangeComlete()
+	{
+		
+	}
+
+
+
+
+
+
+
+
+
+
+
+	// Update is called once per frame
+	void Update () {
+		if(changingstate==false)
+			transform.RotateAround(Vector3.zero,clockwise,wspeed*Time.deltaTime);
+		else
+		{
+			orbitalswitch(28);
+			transform.RotateAround(Vector3.zero,clockwise,wspeed*Time.deltaTime);
+		}
+
+		if(transform.position.y>constant.upperbound)
+		{
+			up=false;
+
+		}
+		if(transform.position.y<constant.lowerbound)
+		{
+
+			up=true;
+		}
+
+
+		if(up)
+			transform.Translate(Vector3.up*yspeed*Time.deltaTime);
+
+		else
+			transform.Translate(Vector3.down*yspeed*Time.deltaTime);
+	}
+}
