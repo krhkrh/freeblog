@@ -1,0 +1,29 @@
+using UnityEngine;
+using System.Collections;
+
+public class nico : barragebase ,move{
+
+
+
+//example
+	void move.move1()
+	{
+		//StartCoroutine(aim1());
+	}
+	void move.move2()
+	{
+
+	}
+	void move.move3()
+	{
+	}
+
+	override IEnumerator behaviorControl ()
+	{
+
+	}
+
+
+
+
+}
