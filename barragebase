@@ -1,0 +1,60 @@
+using UnityEngine;
+using System.Collections;
+
+public class barragebase : MonoBehaviour  {
+
+	public int type = -1;
+	public int HP= 100;
+	public enum level{HIGH,MIDDIUM,LOW};
+	public level lv;
+	float yspeed=0,wspeed=0;
+
+
+	public IEnumerator wave1(){yield return new WaitForSeconds(1.0f);}
+	public IEnumerator wave2(){yield return new WaitForSeconds(1.0f);}
+	public IEnumerator wave3(){yield return new WaitForSeconds(1.0f);}
+	public IEnumerator ring1(){yield return new WaitForSeconds(1.0f);}
+	public IEnumerator ring2(){yield return new WaitForSeconds(1.0f);}
+	public IEnumerator ring3(){yield return new WaitForSeconds(1.0f);}
+	public IEnumerator aim1(){yield return new WaitForSeconds(1.0f);}
+	public IEnumerator aim2(){yield return new WaitForSeconds(1.0f);}
+	public IEnumerator aim3(){yield return new WaitForSeconds(1.0f);}
+
+
+	IEnumerator speedcontrol()
+	{
+		yield return new WaitForSeconds(1.0f);
+	}
+
+	public void Loadall()
+	{
+	}
+
+
+	void OnCollisionEnter (Collision col)
+	{
+
+	}
+
+
+	virtual IEnumerator behaviorControl()
+	{
+		yield return new WaitForSeconds(1.0f);
+	}
+
+	void Awake()
+	{
+		Loadall();
+	}
+
+
+	// Use this for initialization
+	void Start () {
+		lv = level.LOW;
+	}
+	
+	// Update is called once per frame
+	void Update () {
+	
+	}
+}
