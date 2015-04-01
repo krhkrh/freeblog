@@ -1,0 +1,14 @@
+using UnityEngine;
+using System.Collections;
+
+public class Shooter_aim1 : baseShooter {
+
+	override void Awake ()
+	{
+
+	}
+	override IEnumerator spawn ()
+	{
+
+	}
+}
