@@ -1,0 +1,29 @@
+using UnityEngine;
+using System.Collections;
+
+public class baseShooter : MonoBehaviour {
+
+	float yspeed=0,wspeed=0;
+	bool up=true,anticlockwise = true;
+	GameObject bullet;
+
+	
+	virtual IEnumerator spawn()
+	{
+		yield return new WaitForSeconds(1.0f);
+	}
+
+	virtual void Awake()
+	{
+		bullet = Resources.Load("bullet") as GameObject;
+	}
+
+	void Start () {
+		StartCoroutine(spawn());
+	}
+	
+
+	void Update () {
+
+	}
+}
