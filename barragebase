@@ -1,84 +1,172 @@
 using UnityEngine;
 using System.Collections;
 
-public class barragebase : MonoBehaviour  {
+public class barragebase : MonoBehaviour
+{
 
-	public int type = -1;
-	public int HP= 100;
-	public enum level{HIGH,MIDDIUM,LOW,INIT};
-	public level lv;
-	float yspeed=0,wspeed=0;
-	GameObject bullet;
-
-	public IEnumerator wave1(){yield return new WaitForSeconds(1.0f);}
-	public IEnumerator wave2(){yield return new WaitForSeconds(1.0f);}
-	public IEnumerator wave3(){yield return new WaitForSeconds(1.0f);}
-	public IEnumerator ring1(){yield return new WaitForSeconds(1.0f);}
-	public IEnumerator ring2(){yield return new WaitForSeconds(1.0f);}
-	public IEnumerator ring3(){yield return new WaitForSeconds(1.0f);}
-	public IEnumerator aim1(){yield return new WaitForSeconds(1.0f);}
-	public IEnumerator aim2(){yield return new WaitForSeconds(1.0f);}
-	public IEnumerator aim3(){yield return new WaitForSeconds(1.0f);}
-
-
-	IEnumerator speedcontrol()
+	public bool type = true;//true = upforward  false = downforward
+	public int HP = 100;
+	public enum level
 	{
+		HIGH,
+		MIDDIUM,
+		LOW,
+		INIT}
+	;
+	public level lv;
+	public float yspeed = 0, wspeed = 0;
+	public bool up=true,anticlockwise=true;
 
+	public GameObject shooter;
 
-		yield return new WaitForSeconds(1.0f);
+	public IEnumerator wave1 ()
+	{
+		GameObject bb;
+		bb = (GameObject)Instantiate (shooter, this.transform.position, Quaternion.identity);
+		bb.AddComponent ("Shooter_wave1");
+		yield return new WaitForSeconds (1.0f);
+	}
+	public IEnumerator wave2 ()
+	{
+		GameObject bb;
+		bb = (GameObject)Instantiate (shooter, this.transform.position, Quaternion.identity);
+		bb.AddComponent ("Shooter_wave2");
+		yield return new WaitForSeconds (1.0f);
+	}
+	public IEnumerator wave3 ()
+	{
+		GameObject bb;
+		bb = (GameObject)Instantiate (shooter, this.transform.position, Quaternion.identity);
+		bb.AddComponent ("Shooter_wave3");
+		yield return new WaitForSeconds (1.0f);
+	}
+	public IEnumerator ring1 ()
+	{
+		GameObject bb;
+		bb = (GameObject)Instantiate (shooter, this.transform.position, Quaternion.identity);
+		bb.AddComponent ("Shooter_aim1");
+		yield return new WaitForSeconds (1.0f);
+	}
+	public IEnumerator ring2 ()
+	{
+		GameObject bb;
+		bb = (GameObject)Instantiate (shooter, this.transform.position, Quaternion.identity);
+		bb.AddComponent ("Shooter_aim2");
+		yield return new WaitForSeconds (1.0f);
+	}
+	public IEnumerator ring3 ()
+	{
+		GameObject bb;
+		bb = (GameObject)Instantiate (shooter, this.transform.position, Quaternion.identity);
+		bb.AddComponent ("Shooter_aim3");
+		yield return new WaitForSeconds (1.0f);
+	}
+	public IEnumerator aim1 ()
+	{
+		GameObject bb;
+		bb = (GameObject)Instantiate (shooter, this.transform.position, Quaternion.identity);
+		bb.AddComponent ("Shooter_ring1");
+		yield return new WaitForSeconds (1.0f);
+	}
+	public IEnumerator aim2 ()
+	{
+		GameObject bb;
+		bb = (GameObject)Instantiate (shooter, this.transform.position, Quaternion.identity);
+		bb.AddComponent ("Shooter_ring2");
+		yield return new WaitForSeconds (1.0f);
+	}
+	public IEnumerator aim3 ()
+	{
+		GameObject bb;
+		bb = (GameObject)Instantiate (shooter, this.transform.position, Quaternion.identity);
+		bb.AddComponent ("Shooter_ring3");
+		yield return new WaitForSeconds (1.0f);
 	}
 
-	public void Loadall()
+
+	public virtual IEnumerator speedcontrol ()
 	{
+		int i=0;
+		bool wdone = false,ydone =false;
+		while(!(wdone&&ydone))
+		{
+
+			if(wspeed>40)
+				wspeed*=0.9f;
+			else if(wspeed>30)
+				wspeed-=0.5f;
+			else
+				wdone = true;
+			if(yspeed>0)
+				yspeed-= 0.2f;
+			else
+				ydone=true;
+			yield return new WaitForSeconds(0.1f);
+		}
+
+	}
+
+	public void Loadall ()
+	{
+
+
+		shooter = Resources.Load ("shooter") as GameObject;
+
 		// Load Shooters
 	}
 
 
-	void OnCollisionEnter (Collision col)
+	public virtual void OnCollisionEnter (Collision col)
 	{
-		if(col.gameObject.tag.Equals("bullet"))
-		{
-			HP-=10;
-			if(HP<88)
-			{
-				lv= level.MIDDIUM;
+	/*	if (col.gameObject.tag.Equals ("bullet")) {
+			HP -= 10;
+			if (HP < 88) {
+				lv = level.MIDDIUM;
 			}
-			if(HP<55)
-			{
-				lv=level.HIGH;
+			if (HP < 55) {
+				lv = level.HIGH;
 			}
-		}
+		}*/
 	}
-	virtual void move1()
+	public virtual void move1 ()
 	{
 		//StartCoroutine(aim1());
 	}
-	virtual void move2()
+	public virtual void move2 ()
 	{
 		
 	}
-	virtual void move3()
+	public virtual void move3 ()
 	{
 	}
 
-	virtual IEnumerator behaviorControl()
+	public virtual IEnumerator behaviorControl ()
 	{
-		yield return new WaitForSeconds(1.0f);
+		yield return new WaitForSeconds (1.0f);
 	}
 
-	void Awake()
+	public void Awake ()
 	{
-		Loadall();
+		Loadall ();
 	}
 
 
 	// Use this for initialization
-	void Start () {
+	public void Start ()
+	{
 		lv = level.INIT;
+		StartCoroutine(behaviorControl());
+		StartCoroutine(speedcontrol());
 	}
 	
 	// Update is called once per frame
-	void Update () {
-	
+	public void Update ()
+	{
+		if(up){transform.Translate(Vector3.up*yspeed*Time.deltaTime);}
+		else{transform.Translate(Vector3.down*yspeed*Time.deltaTime);}
+
+
+		if(anticlockwise){transform.RotateAround(Vector3.zero,Vector3.up,wspeed*Time.deltaTime);}
+		else{transform.RotateAround(Vector3.zero,Vector3.down,wspeed*Time.deltaTime);}
 	}
 }
