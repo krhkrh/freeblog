@@ -1,0 +1,114 @@
+using UnityEngine;
+using System.Collections;
+
+public class lastspellmanager : MonoBehaviour {
+
+
+	string[] myusname = {"nico","maki","umi","eli","nozomi","rin","hanayo","honoka","kotori"};
+	GameObject ring,ring1;
+	void Awake()
+	{
+		ring = Resources.Load("ring") as GameObject;
+		ring1 = Resources.Load("ring_1") as GameObject;
+	}
+	
+	// Use this for initialization
+	void Start () {
+
+		StartCoroutine(spawn());
+	
+	}
+
+
+	IEnumerator spawn()
+	{
+		yield return new WaitForSeconds(3.0f);
+		GameObject bb;
+		Vector3 nextpositionU = Vector3.forward*constant.radius;
+		Vector3 nextpositionL = Vector3.back*constant.radius;
+
+		nextpositionL.y=constant.lowerbound+2;
+		nextpositionU.y=constant.upperbound-2;
+
+
+
+		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
+		bb.AddComponent("nico");
+		bb.GetComponent<nico>().yspeed=3;
+		bb.GetComponent<nico>().up=true;
+		bb.GetComponent<nico>().wspeed=45;
+		bb.GetComponent<nico>().anticlockwise=true;
+		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
+
+		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
+		bb.AddComponent("maki");
+		bb.GetComponent<maki>().yspeed=3;
+		bb.GetComponent<maki>().up=true;
+		bb.GetComponent<maki>().wspeed=45;
+		bb.GetComponent<maki>().anticlockwise=true;
+		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
+
+		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
+		bb.AddComponent("umi");
+		bb.GetComponent<umi>().yspeed=3;
+		bb.GetComponent<umi>().up=true;
+		bb.GetComponent<umi>().wspeed=45;
+		bb.GetComponent<umi>().anticlockwise=true;
+		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
+
+		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
+		bb.AddComponent("eli");
+		bb.GetComponent<eli>().yspeed=3;
+		bb.GetComponent<eli>().up=true;
+		bb.GetComponent<eli>().wspeed=45;
+		bb.GetComponent<eli>().anticlockwise=true;
+		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
+
+		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
+		bb.AddComponent("nozomi");
+		bb.GetComponent<nozomi>().yspeed=3;
+		bb.GetComponent<nozomi>().up=true;
+		bb.GetComponent<nozomi>().wspeed=45;
+		bb.GetComponent<nozomi>().anticlockwise=true;
+		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
+
+		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
+		bb.AddComponent("rin");
+		bb.GetComponent<rin>().yspeed=3;
+		bb.GetComponent<rin>().up=true;
+		bb.GetComponent<rin>().wspeed=45;
+		bb.GetComponent<rin>().anticlockwise=true;
+		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
+
+		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
+		bb.AddComponent("hanayo");
+		bb.GetComponent<hanayo>().yspeed=3;
+		bb.GetComponent<hanayo>().up=true;
+		bb.GetComponent<hanayo>().wspeed=45;
+		bb.GetComponent<hanayo>().anticlockwise=true;
+		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
+
+		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
+		bb.AddComponent("honoka");
+		bb.GetComponent<honoka>().yspeed=3;
+		bb.GetComponent<honoka>().up=true;
+		bb.GetComponent<honoka>().wspeed=45;
+		bb.GetComponent<honoka>().anticlockwise=true;
+		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
+
+		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
+		bb.AddComponent("kotori");
+		bb.GetComponent<kotori>().yspeed=3;
+		bb.GetComponent<kotori>().up=true;
+		bb.GetComponent<kotori>().wspeed=45;
+		bb.GetComponent<kotori>().anticlockwise=true;
+		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
+
+	}
+
+
+	// Update is called once per frame
+	void Update () {
+	
+	}
+}
