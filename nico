@@ -3,34 +3,40 @@ using System.Collections;
 
 public class nico : barragebase{
 
-	override void move1 ()
+	public override void move1 ()
 	{
 
 	}
-	override void move2 ()
+	public override void move2 ()
 	{
 
 	}
-	override void move3 ()
+	public override void move3 ()
 	{
 
 	}
-	
-	override IEnumerator behaviorControl ()
+
+
+
+	public override IEnumerator behaviorControl ()
 	{
-		if(lv==3)
+		GameObject bb;
+		yield return new WaitForSeconds(2.0f);
+		if(lv==level.INIT)
 		{
-
+			bb = (GameObject)Instantiate(shooter,this.transform.position,Quaternion.identity);
+			bb.AddComponent("Shooter_aim1");
+			bb.transform.parent=this.transform;
 		}
-		else if(lv==2)
+		else if(lv==level.LOW)
 		{
 			this.move1();
 		}
-		else if(lv==1)
+		else if(lv==level.MIDDIUM)
 		{
 			this.move2();
 		}
-		else if(lv==0)
+		else if(lv==level.HIGH)
 		{
 			this.move3();
 		}
