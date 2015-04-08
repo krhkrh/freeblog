@@ -1,0 +1,44 @@
+using UnityEngine;
+using System.Collections;
+
+public class musicmanager : MonoBehaviour {
+
+	public GameObject Bnico,Bmaki,Beli,Bumi,Bnozomi,Brin,Bhanayo,Bhonoka,Bkotori;
+	public GameObject Tnico,Tmaki,Teli,Tumi,Tnozomi,Trin,Thanayo,Thonoka,Tkotori;
+
+	public void init(GameObject bnico,GameObject bmaki,GameObject beli,GameObject bumi,GameObject bnozomi,GameObject brin,GameObject bhanayo,GameObject bhonoka,GameObject bkotori,
+	            GameObject tnico,GameObject tmaki,GameObject teli,GameObject tumi,GameObject tnozomi,GameObject trin,GameObject thanayo,GameObject thonoka,GameObject tkotori)
+	{
+		this.Bnico = bnico;
+		this.Bmaki = bmaki;
+		this.Beli = beli;
+		this.Bumi = bumi;
+		this.Bnozomi = bnozomi;
+		this.Brin = brin;
+		this.Bhanayo = bhanayo;
+		this.Bhonoka = bhonoka;
+		this.Bkotori = bkotori;
+
+		this.Tnico = tnico;
+		this.Tmaki = tmaki;
+		this.Teli = teli;
+		this.Tumi = tumi;
+		this.Tnozomi = tnozomi;
+		this.Trin = trin;
+		this.Thanayo = thanayo;
+		this.Thonoka = thonoka;
+		this.Tkotori = tkotori;
+
+	}
+
+	public IEnumerator musicstart()
+	{
+		yield return new WaitForSeconds(1.0f);
+	}
+
+
+	// Use this for initialization
+	void Start () {
+		StartCoroutine(musicstart());
+	}
+}
