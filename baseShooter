@@ -6,7 +6,10 @@ public class baseShooter : MonoBehaviour {
 
 	public GameObject bullet;
 
-	
+	public void halt()
+	{Destroy(gameObject);
+	}
+
 	public virtual IEnumerator spawn()
 	{
 		yield return new WaitForSeconds(1.0f);
