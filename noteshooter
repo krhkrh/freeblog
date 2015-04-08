@@ -1,0 +1,51 @@
+using UnityEngine;
+using System.Collections;
+
+public class noteshooter : MonoBehaviour {
+
+	// Use this for initialization
+	public bool type = false;
+	GameObject note;
+	void Awake()
+	{
+		note = Resources.Load("ring") as GameObject;
+	}
+
+	void Start()
+	{
+		StartCoroutine(postshoot());
+	}
+
+	IEnumerator postshoot()
+	{
+		yield return new WaitForSeconds(3.0f);
+		shootnote(new note(constant.ShooterName.t1,0.1f,0.3f,"a","q"));
+
+	}
+
+	public void shootnote(note n)
+	{
+
+
+		GameObject bb;
+		if(type)
+			bb = (GameObject)Instantiate(note,this.transform.position+Vector3.up,Quaternion.identity);
+		else
+			bb = (GameObject)Instantiate(note,this.transform.position+Vector3.down,Quaternion.identity);
+
+		bb.AddComponent("notebehaviro");
+		bb.GetComponent<notebehaviro>().up=type;
+		bb.GetComponent<notebehaviro>().yspeed=3.0f;
+		bb.GetComponent<notebehaviro>().wspeed=0;
+		bb.GetComponent<notebehaviro>().n=n;
+
+			/*
+			 * 	offset = o;
+				volume = v;
+				audioID = a;
+				key = k;
+			 * */
+	}
+
+
+}
