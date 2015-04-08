@@ -2,47 +2,57 @@ using UnityEngine;
 using System.Collections;
 
 public class nico : barragebase{
-
-	public override void move1 ()
+	GameObject bb;
+	public override void move1 (GameObject parent)
 	{
+		bb = (GameObject)Instantiate(shooter,parent.transform.position,Quaternion.identity);
+		bb.AddComponent("Shooter_aim1");
+		bb.transform.parent=this.transform;
+	}
+	public override void move2 (GameObject parent)
+	{
+		
+	}
+	public override void move3 (GameObject parent)
+	{
+		
+	}
+	
+	
+	
+	
+	public override void Start ()
+	{
+		base.Start ();
 
 	}
-	public override void move2 ()
-	{
+	
 
-	}
-	public override void move3 ()
-	{
-
-	}
-
-
-
+	
 	public override IEnumerator behaviorControl ()
 	{
-		GameObject bb;
+		
 		yield return new WaitForSeconds(2.0f);
 		if(lv==level.INIT)
 		{
-			bb = (GameObject)Instantiate(shooter,this.transform.position,Quaternion.identity);
-			bb.AddComponent("Shooter_aim1");
-			bb.transform.parent=this.transform;
+
+			//move1();
+			
 		}
 		else if(lv==level.LOW)
 		{
-			this.move1();
+			this.move1(gameObject);
 		}
 		else if(lv==level.MIDDIUM)
 		{
-			this.move2();
+			this.move2(gameObject);
 		}
 		else if(lv==level.HIGH)
 		{
-			this.move3();
+			this.move3(gameObject);
 		}
-
+		
 	}
-
 
 
 
