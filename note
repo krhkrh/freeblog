@@ -1,0 +1,25 @@
+using UnityEngine;
+using System.Collections;
+
+public class note {
+
+	public constant.ShooterName shooter= constant.ShooterName.t1;
+	public float offset=0.0f;
+	public float volume=0.3f;
+	public string audioID="";
+	public string key="";
+
+	public note()
+	{
+	}
+
+	public note(constant.ShooterName s,float o,float v,string a,string k)
+	{
+		shooter = s;
+		offset = o;
+		volume = v;
+		audioID = a;
+		key = k;
+	}
+
+}
