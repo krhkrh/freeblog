@@ -1,0 +1,22 @@
+using UnityEngine;
+using System.Collections;
+
+public class constant {
+
+	public static float radius = 12.0f;
+	public static float upperbound= 5.0f,lowerbound = -6.0f;
+
+	public static float y2wratio = 30.0f; 
+
+	public enum ShooterName{t1,t2,t3,t4,t5,t6,t7,t8,t9,b1,b2,b3,b4,b5,b6,b7,b8,b9};
+
+	public static ArrayList[] Start_Dash = new ArrayList[100];
+
+
+	public static void initStart_Dash()
+	{
+
+		//constant.Start_Dash[0]= new ArrayList(new note());
+	}
+
+}
