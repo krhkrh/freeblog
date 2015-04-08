@@ -3,9 +3,10 @@ using System.Collections;
 
 public class barragebase : MonoBehaviour
 {
-
+	public float bound=0;
 	public bool type = true;//true = upforward  false = downforward
 	public int HP = 100;
+	public constant.ShooterName shootername= constant.ShooterName.t1;
 	public enum level
 	{
 		HIGH,
@@ -86,23 +87,71 @@ public class barragebase : MonoBehaviour
 
 	public virtual IEnumerator speedcontrol ()
 	{
-		int i=0;
+
 		bool wdone = false,ydone =false;
-		while(!(wdone&&ydone))
+		if(type==false)
+		{
+			up=false;
+			anticlockwise=false;
+
+			while(!(wdone&&ydone))
+			{
+				if(wspeed>40)
+					wspeed*=0.8f;
+				else if(wspeed>30)
+					wspeed-=0.5f;
+				else
+				{
+					wdone = true;
+					wspeed = 20;
+				}
+				if(yspeed>0&&transform.position.y>bound)
+					yspeed-= 0.1f;
+				else
+				{
+					transform.position = new Vector3(transform.position.x,bound,transform.position.z);
+					ydone=true;
+					yspeed=0;
+				}
+				yield return new WaitForSeconds(0.1f);
+			}
+
+
+		}
+		else
 		{
 
-			if(wspeed>40)
-				wspeed*=0.9f;
-			else if(wspeed>30)
-				wspeed-=0.5f;
-			else
-				wdone = true;
-			if(yspeed>0)
-				yspeed-= 0.2f;
-			else
-				ydone=true;
-			yield return new WaitForSeconds(0.1f);
+			up=true;
+			anticlockwise=true;
+			while(!(wdone&&ydone))
+			{
+				
+				if(wspeed>40)
+					wspeed*=0.8f;
+				else if(wspeed>30)
+					wspeed-=0.5f;
+				else
+				{
+					wdone = true;
+					wspeed=20;
+				}
+				if(yspeed>0&&transform.position.y<bound)
+					yspeed-= 0.1f;
+				else
+				{
+					transform.position = new Vector3(transform.position.x,bound,transform.position.z);
+					ydone=true;
+					yspeed=0;
+				}
+				yield return new WaitForSeconds(0.1f);
+
+
+			}
 		}
+
+
+
+
 
 	}
 
@@ -116,7 +165,7 @@ public class barragebase : MonoBehaviour
 	}
 
 
-	public virtual void OnCollisionEnter (Collision col)
+	public virtual void OnTriggerEnter(Collider other)
 	{
 	/*	if (col.gameObject.tag.Equals ("bullet")) {
 			HP -= 10;
@@ -128,15 +177,28 @@ public class barragebase : MonoBehaviour
 			}
 		}*/
 	}
-	public virtual void move1 ()
+	public virtual void OnTriggerExit(Collider other)
+	{
+		/*	if (col.gameObject.tag.Equals ("bullet")) {
+			HP -= 10;
+			if (HP < 88) {
+				lv = level.MIDDIUM;
+			}
+			if (HP < 55) {
+				lv = level.HIGH;
+			}
+		}*/
+	}
+
+	public virtual void move1 (GameObject parent)
 	{
 		//StartCoroutine(aim1());
 	}
-	public virtual void move2 ()
+	public virtual void move2 (GameObject parent)
 	{
 		
 	}
-	public virtual void move3 ()
+	public virtual void move3 (GameObject parent)
 	{
 	}
 
@@ -152,15 +214,16 @@ public class barragebase : MonoBehaviour
 
 
 	// Use this for initialization
-	public void Start ()
+	public virtual void Start ()
 	{
 		lv = level.INIT;
 		StartCoroutine(behaviorControl());
 		StartCoroutine(speedcontrol());
+
 	}
 	
 	// Update is called once per frame
-	public void Update ()
+	public virtual void Update ()
 	{
 		if(up){transform.Translate(Vector3.up*yspeed*Time.deltaTime);}
 		else{transform.Translate(Vector3.down*yspeed*Time.deltaTime);}
