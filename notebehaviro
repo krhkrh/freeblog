@@ -1,0 +1,91 @@
+using UnityEngine;
+using System.Collections;
+
+public class notebehaviro : barragebase {
+
+
+	public note n;
+
+	public bool status = false;
+
+	GameObject parent;
+	public override IEnumerator speedcontrol ()
+	{yield return new WaitForSeconds(0.1f);}
+
+
+	public override IEnumerator behaviorControl ()
+	{
+		gameObject.tag = "note";
+		return base.behaviorControl ();
+	}
+
+	public override void move1 (GameObject parent)
+	{
+		GameObject bb;
+		if(!status)
+		{
+			bb = (GameObject)Instantiate(shooter,parent.transform.position,Quaternion.identity);
+			bb.AddComponent("Shooter_aim1");
+
+		}
+		else{
+			bb = (GameObject)Instantiate(shooter,parent.transform.position,Quaternion.identity);
+			bb.AddComponent("Shooter_aim1");
+			bb.transform.parent=parent.transform;
+		}
+
+
+
+	}
+
+	public override void OnTriggerEnter (Collider other)
+	{
+		if(other.gameObject.tag=="idle")
+		{
+			parent = other.gameObject;
+			status = true;
+		}
+
+	}
+
+	public override void OnTriggerExit (Collider other)
+	{
+		if(status)
+		{
+			if(parent!=null)
+			move1(parent);
+
+			else move1(gameObject);
+			Destroy(gameObject);
+		}
+
+	}
+	public IEnumerator destroyself(float s)
+	{
+		yield return new WaitForSeconds(s);
+		Destroy(gameObject);
+	}
+
+	public override void Update ()
+	{
+
+		if(!status){
+			if (Input.GetKeyDown(n.key)) {
+
+				if(parent!=null)
+					move1(parent);
+				
+				else move1(gameObject);
+				Destroy(gameObject);
+			}
+		}
+		else
+		{
+			if (Input.GetKeyDown(n.key)) {
+				Destroy(gameObject);
+			}
+		}
+		base.Update();
+	}
+
+}
