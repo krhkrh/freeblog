@@ -5,104 +5,232 @@ public class lastspellmanager : MonoBehaviour {
 
 
 	string[] myusname = {"nico","maki","umi","eli","nozomi","rin","hanayo","honoka","kotori"};
-	GameObject ring,ring1;
+	GameObject ring,ring1,shooter;
+
+
+	GameObject Bnico,Bmaki,Beli,Bumi,Bnozomi,Brin,Bhanayo,Bhonoka,Bkotori;
+	GameObject Tnico,Tmaki,Teli,Tumi,Tnozomi,Trin,Thanayo,Thonoka,Tkotori;
 	void Awake()
 	{
 		ring = Resources.Load("ring") as GameObject;
 		ring1 = Resources.Load("ring_1") as GameObject;
+		shooter = Resources.Load ("shooter") as GameObject;
 	}
 	
 	// Use this for initialization
 	void Start () {
 
 		StartCoroutine(spawn());
-	
+		constant.initStart_Dash();
 	}
 
+	public GameObject getshooter(Transform parent,bool type)
+	{
+		GameObject bb;
+		bb = (GameObject)Instantiate(shooter,parent.position,Quaternion.identity);
+		bb.AddComponent("noteshooter");
+		bb.GetComponent<noteshooter>().type=type;
+		bb.transform.parent=parent;
+		return bb;
+	}
 
 	IEnumerator spawn()
 	{
 		yield return new WaitForSeconds(3.0f);
 		GameObject bb;
 		Vector3 nextpositionU = Vector3.forward*constant.radius;
-		Vector3 nextpositionL = Vector3.back*constant.radius;
-
-		nextpositionL.y=constant.lowerbound+2;
-		nextpositionU.y=constant.upperbound-2;
+		Vector3 nextpositionL = nextpositionU;
+		nextpositionL.y=constant.lowerbound;
+		nextpositionU.y=constant.upperbound;
 
 
 
 		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
 		bb.AddComponent("nico");
 		bb.GetComponent<nico>().yspeed=3;
-		bb.GetComponent<nico>().up=true;
+		bb.GetComponent<nico>().type=true;
+		bb.GetComponent<nico>().bound=constant.lowerbound+2;
 		bb.GetComponent<nico>().wspeed=45;
-		bb.GetComponent<nico>().anticlockwise=true;
+		Bnico = getshooter(bb.transform,true);
+		bb.GetComponent<nico>().shooter=Bnico;
+			
+
+
 		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
 
 		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
 		bb.AddComponent("maki");
 		bb.GetComponent<maki>().yspeed=3;
-		bb.GetComponent<maki>().up=true;
+		bb.GetComponent<maki>().type=true;
 		bb.GetComponent<maki>().wspeed=45;
-		bb.GetComponent<maki>().anticlockwise=true;
+		bb.GetComponent<maki>().bound=constant.lowerbound+2;
+		Bmaki = getshooter(bb.transform,true);
+		bb.GetComponent<maki>().shooter=Bmaki;
 		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
 
 		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
 		bb.AddComponent("umi");
 		bb.GetComponent<umi>().yspeed=3;
-		bb.GetComponent<umi>().up=true;
+		bb.GetComponent<umi>().type=true;
 		bb.GetComponent<umi>().wspeed=45;
-		bb.GetComponent<umi>().anticlockwise=true;
+		bb.GetComponent<umi>().bound=constant.lowerbound+2;
+		Bumi = getshooter(bb.transform,true);
+		bb.GetComponent<umi>().shooter=Bumi;
 		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
 
 		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
 		bb.AddComponent("eli");
 		bb.GetComponent<eli>().yspeed=3;
-		bb.GetComponent<eli>().up=true;
+		bb.GetComponent<eli>().type=true;
 		bb.GetComponent<eli>().wspeed=45;
-		bb.GetComponent<eli>().anticlockwise=true;
+		bb.GetComponent<eli>().bound=constant.lowerbound+2;
+		Beli = getshooter(bb.transform,true);
+		bb.GetComponent<eli>().shooter=Beli;
 		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
 
 		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
 		bb.AddComponent("nozomi");
 		bb.GetComponent<nozomi>().yspeed=3;
-		bb.GetComponent<nozomi>().up=true;
+		bb.GetComponent<nozomi>().type=true;
 		bb.GetComponent<nozomi>().wspeed=45;
-		bb.GetComponent<nozomi>().anticlockwise=true;
+		bb.GetComponent<nozomi>().bound=constant.lowerbound+2;
+		Bnozomi = getshooter(bb.transform,true);
+		bb.GetComponent<nozomi>().shooter=Bnozomi;
 		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
 
 		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
 		bb.AddComponent("rin");
 		bb.GetComponent<rin>().yspeed=3;
-		bb.GetComponent<rin>().up=true;
+		bb.GetComponent<rin>().type=true;
 		bb.GetComponent<rin>().wspeed=45;
-		bb.GetComponent<rin>().anticlockwise=true;
+		bb.GetComponent<rin>().bound=constant.lowerbound+2;
+		Brin = getshooter(bb.transform,true);
+		bb.GetComponent<rin>().shooter=Brin;
 		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
 
 		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
 		bb.AddComponent("hanayo");
 		bb.GetComponent<hanayo>().yspeed=3;
-		bb.GetComponent<hanayo>().up=true;
+		bb.GetComponent<hanayo>().type=true;
 		bb.GetComponent<hanayo>().wspeed=45;
-		bb.GetComponent<hanayo>().anticlockwise=true;
+		bb.GetComponent<hanayo>().bound=constant.lowerbound+2;
+		Bhanayo = getshooter(bb.transform,true);
+		bb.GetComponent<hanayo>().shooter=Bhanayo;
 		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
 
 		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
 		bb.AddComponent("honoka");
 		bb.GetComponent<honoka>().yspeed=3;
-		bb.GetComponent<honoka>().up=true;
+		bb.GetComponent<honoka>().type=true;
 		bb.GetComponent<honoka>().wspeed=45;
-		bb.GetComponent<honoka>().anticlockwise=true;
+		bb.GetComponent<honoka>().bound=constant.lowerbound+2;
+		Bhonoka = getshooter(bb.transform,true);
+		bb.GetComponent<honoka>().shooter=Bhonoka;
 		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
 
 		bb = (GameObject)Instantiate(ring,nextpositionL,Quaternion.identity);
 		bb.AddComponent("kotori");
 		bb.GetComponent<kotori>().yspeed=3;
-		bb.GetComponent<kotori>().up=true;
+		bb.GetComponent<kotori>().type=true;
 		bb.GetComponent<kotori>().wspeed=45;
-		bb.GetComponent<kotori>().anticlockwise=true;
+		bb.GetComponent<kotori>().bound=constant.lowerbound+2;
+		Bkotori = getshooter(bb.transform,true);
+		bb.GetComponent<kotori>().shooter=Bkotori;
 		nextpositionL = Quaternion.Euler(0,40,0)*nextpositionL;
+
+
+
+
+
+		bb = (GameObject)Instantiate(ring,nextpositionU,Quaternion.identity);
+		bb.AddComponent("nico");
+		bb.GetComponent<nico>().type=false;
+		bb.GetComponent<nico>().bound=constant.upperbound-2;
+		bb.GetComponent<nico>().wspeed=45;
+		bb.GetComponent<nico>().yspeed=3;
+		Tnico = getshooter(bb.transform,false);
+		bb.GetComponent<nico>().shooter=Tnico;
+		nextpositionU = Quaternion.Euler(0,40,0)*nextpositionU;
+		
+		bb = (GameObject)Instantiate(ring,nextpositionU,Quaternion.identity);
+		bb.AddComponent("maki");
+		bb.GetComponent<maki>().yspeed=3;
+		bb.GetComponent<maki>().type=false;
+		bb.GetComponent<maki>().wspeed=45;
+		bb.GetComponent<maki>().bound=constant.upperbound-2;
+		Tmaki = getshooter(bb.transform,false);
+		bb.GetComponent<maki>().shooter=Tmaki;
+		nextpositionU = Quaternion.Euler(0,40,0)*nextpositionU;
+		
+		bb = (GameObject)Instantiate(ring,nextpositionU,Quaternion.identity);
+		bb.AddComponent("umi");
+		bb.GetComponent<umi>().yspeed=3;
+		bb.GetComponent<umi>().type=false;
+		bb.GetComponent<umi>().wspeed=45;
+		bb.GetComponent<umi>().bound=constant.upperbound-2;
+		Tumi = getshooter(bb.transform,false);
+		bb.GetComponent<umi>().shooter=Tumi;
+		nextpositionU = Quaternion.Euler(0,40,0)*nextpositionU;
+		
+		bb = (GameObject)Instantiate(ring,nextpositionU,Quaternion.identity);
+		bb.AddComponent("eli");
+		bb.GetComponent<eli>().yspeed=3;
+		bb.GetComponent<eli>().type=false;
+		bb.GetComponent<eli>().wspeed=45;
+		bb.GetComponent<eli>().bound=constant.upperbound-2;
+		Teli = getshooter(bb.transform,false);
+		bb.GetComponent<eli>().shooter=Teli;
+		nextpositionU = Quaternion.Euler(0,40,0)*nextpositionU;
+		
+		bb = (GameObject)Instantiate(ring,nextpositionU,Quaternion.identity);
+		bb.AddComponent("nozomi");
+		bb.GetComponent<nozomi>().yspeed=3;
+		bb.GetComponent<nozomi>().type=false;
+		bb.GetComponent<nozomi>().wspeed=45;
+		bb.GetComponent<nozomi>().bound=constant.upperbound-2;
+		Tnozomi = getshooter(bb.transform,false);
+		bb.GetComponent<nozomi>().shooter=Tnozomi;
+		nextpositionU = Quaternion.Euler(0,40,0)*nextpositionU;
+		
+		bb = (GameObject)Instantiate(ring,nextpositionU,Quaternion.identity);
+		bb.AddComponent("rin");
+		bb.GetComponent<rin>().yspeed=3;
+		bb.GetComponent<rin>().bound=constant.upperbound-2;
+		bb.GetComponent<rin>().wspeed=45;
+		bb.GetComponent<rin>().type=false;
+		Trin = getshooter(bb.transform,false);
+		bb.GetComponent<rin>().shooter=Trin;
+		nextpositionU = Quaternion.Euler(0,40,0)*nextpositionU;
+		
+		bb = (GameObject)Instantiate(ring,nextpositionU,Quaternion.identity);
+		bb.AddComponent("hanayo");
+		bb.GetComponent<hanayo>().yspeed=3;
+		bb.GetComponent<hanayo>().type=false;
+		bb.GetComponent<hanayo>().wspeed=45;
+		bb.GetComponent<hanayo>().bound=constant.upperbound-2;
+		Thanayo = getshooter(bb.transform,false);
+		bb.GetComponent<hanayo>().shooter=Thanayo;
+		nextpositionU = Quaternion.Euler(0,40,0)*nextpositionU;
+		
+		bb = (GameObject)Instantiate(ring,nextpositionU,Quaternion.identity);
+		bb.AddComponent("honoka");
+		bb.GetComponent<honoka>().yspeed=3;
+		bb.GetComponent<honoka>().type=false;
+		bb.GetComponent<honoka>().wspeed=45;
+		bb.GetComponent<honoka>().bound=constant.upperbound-2;
+		Thonoka = getshooter(bb.transform,false);
+		bb.GetComponent<honoka>().shooter=Thonoka;
+		nextpositionU = Quaternion.Euler(0,40,0)*nextpositionU;
+		
+		bb = (GameObject)Instantiate(ring,nextpositionU,Quaternion.identity);
+		bb.AddComponent("kotori");
+		bb.GetComponent<kotori>().yspeed=3;
+		bb.GetComponent<kotori>().type=false;
+		bb.GetComponent<kotori>().wspeed=45;
+		bb.GetComponent<kotori>().bound=constant.upperbound-2;
+		Tkotori = getshooter(bb.transform,false);
+		bb.GetComponent<kotori>().shooter=Tkotori;
+		nextpositionU = Quaternion.Euler(0,40,0)*nextpositionU;
 
 	}
 
