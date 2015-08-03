@@ -1,0 +1,19 @@
+
+
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
+
+public class ViewHolders {
+public static class ParentViewHolder extends  RecyclerView.ViewHolder
+	{
+		public View itemView;
+		public boolean Removeble = false;
+
+		public ParentViewHolder(View itemView, boolean removeble) {
+			super(itemView);
+			this.itemView = itemView;
+			this.Removeble = removeble;
+
+		}
+	}
+}
