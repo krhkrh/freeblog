@@ -1,0 +1,1480 @@
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.support.annotation.Nullable;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Toast;
+
+import com.barclays.android.barclaysmobilebanking.R;
+import com.barclays.bmb.framework.base.ApplicationLayer;
+import com.barclays.bmb.framework.constants.DataConstants;
+import com.barclays.bmb.framework.dal.account.BMBGroup;
+import com.barclays.bmb.framework.dal.account.BarclaysAccount;
+import com.barclays.bmb.framework.dal.account.MortgagePlaceholder;
+import com.barclays.bmb.framework.services.ServiceConstants;
+import com.barclays.bmb.ui.adaptors.account.ViewHolders.*;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+
+/**
+ * Created by zhangch6 on 6/23/2015.
+ */
+public abstract class RecyclerAdapterE extends RecyclerView.Adapter {
+
+    public ApplicationLayer mActivity;
+
+    public final int DUMMY = -1, TITLE = -2, ITEM = -3, BANNER = -4, WAITING = -5;
+    public boolean EnableAddNRemove = false, EnableDragNDrop = false, ListenChange = false;
+
+    public ArrayList<Slot> dataset = new ArrayList<>();
+
+    Slot dummy;
+    Slot waiting;
+
+    ContentManager groupManager;
+
+    //initiation region////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    ArrayList<Slot> header, footer;
+    LinkedHashMap<Slot, ArrayList<Slot>> content = new LinkedHashMap();
+    int headerArea = -1, footerArea = 99999;
+
+    boolean footerReady = false, dummyReady = false, headerReady = false, contentReady = false, waitingReady = false;
+
+
+    public RecyclerAdapterE(ApplicationLayer con, boolean er, boolean ed, boolean lc) {
+        mActivity = con;
+        EnableAddNRemove = er;
+        EnableDragNDrop = ed;
+        ListenChange = lc;
+        groupManager = new ContentManager();
+
+    }
+
+    public RecyclerAdapterE(ApplicationLayer con, ArrayList<Slot> h, ArrayList<Slot> f, LinkedHashMap<Slot, ArrayList<Slot>> c) {
+        this.mActivity = con;
+
+        dataset.addAll(h);
+        headerArea = h.size() - 1;
+
+        for (Slot s : c.keySet()) {
+            dataset.addAll(c.get(s));
+        }
+
+        dataset.addAll(f);
+        footerArea = dataset.size() - f.size();
+    }
+
+
+    public void setDummySlot(Slot s) {
+        dummy = s;
+        dummyReady = true;
+    }
+
+    public void setWaitingSlot(Slot s) {
+        waiting = s;
+        waitingReady = true;
+    }
+
+
+    public boolean setHeader(ArrayList<Slot> h) {
+
+        if (h != null && h.size() != 0) {
+            this.header = h;
+            headerReady = true;
+        }
+        return headerReady;
+    }
+
+    public boolean setFooter(ArrayList<Slot> f) {
+        if (f != null && f.size() != 0) {
+            this.footer = f;
+            footerReady = true;
+        }
+        return footerReady;
+    }
+
+    public boolean setContent(LinkedHashMap<Slot, ArrayList<Slot>> c) {
+        if (c != null && c.size() != 0) {
+            this.content = c;
+            contentReady = true;
+        }
+        return contentReady;
+    }
+
+    public void construct() {
+
+        if (headerReady) {
+
+            dataset.addAll(header);
+            headerArea = header.size() - 1;
+            GroupManager.Group g = new GroupManager.Group(header.get(0), 0, headerArea, header);
+            groupManager.groupList.add(g);
+        }
+
+        if (contentReady) {
+
+            int head = headerArea + 1;
+            int tail = headerArea + 1;
+
+            for (Slot s : content.keySet()) {
+
+                ArrayList<Slot> placeHolder = content.get(s);
+                tail = head;
+                tail += placeHolder.size();
+                ContentManager.Group group = new ContentManager.Group(s, head, tail, placeHolder);
+
+                groupManager.groupList.add(group);
+                head = tail + 1;
+
+                dataset.add(s);
+                dataset.addAll(content.get(s));
+            }
+
+            footerArea = dataset.size();
+        }
+
+        if (footerReady) {
+            dataset.addAll(footer);
+            footerArea = dataset.size() - footer.size();
+
+            GroupManager.Group g = new GroupManager.Group(footer.get(0), footerArea, footerArea + footer.size() - 1, footer);
+            groupManager.groupList.add(g);
+
+        }
+        if (dummyReady) {
+            //some thing here,not required//
+        } else {
+            dummy = new Slot<String, Boolean>("dummy", R.layout.view_gcp_account_not_display, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(mActivity, "error", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        if (waitingReady) {
+
+        } else {
+            waiting = new Slot<String, Boolean>("waiting", R.layout.view_gcp_account_not_display, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(mActivity, "waiting", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        if (DragHandler == -1) {
+            EnableDragNDrop = false;
+        }
+
+        if (ListenChange) {
+            if (mActivity instanceof recyclerBehaviorListener)
+                this.recyclerListener = (recyclerBehaviorListener) mActivity;
+        }
+
+    }
+
+    //productive region////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    @Override
+    public int getItemViewType(int position) {
+        int type = 0;
+        if (dataset.get(position).getLayoutReady()) {
+            type = dataset.get(position).GetLayout();
+        } else return waiting.GetLayout();
+        return type;
+    }
+
+    // reminder: private final int DUMMY = -1 ,TITLE = -2, ITEM =-3,BANNER = -4,WAITING = -5;
+    @Override
+    public abstract RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType);
+
+    public void setView_header(final ParentViewHolder header, int position) {
+    }
+
+    public void setView_footer(final ParentViewHolder footer, int position) {
+    }
+
+    public void setView_item(final ParentViewHolder item, int position) {
+    }
+
+    public void setView_banner(final ParentViewHolder banner, int position) {
+    }
+
+    public void setView_title(final ParentViewHolder title, int position) {
+    }
+
+    public void setDefaultTitleEvent(final ParentViewHolder title, int position) {
+        if (dataset.get(position).getEventReady()) {
+            title.itemView.setOnClickListener(dataset.get(position).getEvent());
+        } else if (title.Removeble)
+            title.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (!self.getItemAnimator().isRunning()) {
+                        GroupManager.Group g = groupManager.getGroup(title.getAdapterPosition());
+
+                        if (g.data.size() != 0) {
+                            if (g.expanded) {
+                                RemoveItem(g.head + 1, g.data.size());
+                                g.expanded = false;
+                            } else {
+                                AddData(g.head + 1, g.data, true);
+                                g.expanded = true;
+
+                            }
+                        }
+                    }
+                }
+            });
+    }
+
+    public void setView_dummy(final ParentViewHolder dummy, int position) {
+    }
+
+    public void setView_waiting(final ParentViewHolder waiting, int position) {
+    }
+
+    public abstract void setView(final ParentViewHolder holder, int position);
+
+    public void setDefaultEvent(final ParentViewHolder waiting, int position) {
+        if (dataset.get(position).getEventReady())
+            waiting.itemView.setOnClickListener(dataset.get(position).getEvent());
+        else if (waiting.Removeble) {
+            if (position < footerArea && position > headerArea) {
+                dataset.get(position).setReserveCode(null);
+            }
+            waiting.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (!self.getItemAnimator().isRunning())
+                        RemoveSelf(waiting.getAdapterPosition());
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof ParentViewHolder)
+            setView((ParentViewHolder) holder, position);
+    }
+
+    @Override
+    public int getItemCount() {
+        return dataset.size();
+    }
+
+    //support region////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //group manager//////////////////////////////////////////////////
+    //we might have other manager like header manager or footer manager,can use again
+    public interface GroupManager {
+        public int getPosLowerBound(int position);
+
+        public int getPosUpperBound(int position);
+
+        public void notifyRemove(int position, int length);
+
+        public void notifyAdd(int position, int length, boolean fromAppend);
+
+        class Group {
+            Slot key;
+            ArrayList<Slot> data;
+            int head = 0, tail = 0;
+            boolean expanded = true;
+
+            public Group(Slot key, int head, int tail, ArrayList<Slot> data) {
+                this.key = key;
+                this.head = head;
+                this.tail = tail;
+                this.data = data;
+            }
+        }
+    }
+
+
+    public class ContentManager implements GroupManager {
+        ArrayList<GroupManager.Group> groupList = new ArrayList();
+
+        public int getType(int position) {
+            for (Group g : groupList) {
+                if (g.head == position) {
+                    if (g.data.size() == 0) {
+                        return BANNER;
+                    } else {
+                        return TITLE;
+                    }
+                }
+            }
+            return ITEM;
+
+        }
+
+        public Group exportHeader() {
+            if (headerReady)
+                return groupList.get(0);
+            else return null;
+        }
+
+        public Group exportFooter() {
+            if (footerReady)
+                return groupList.get(groupList.size() - 1);
+            else return null;
+        }
+
+        public LinkedHashMap<Slot, ArrayList<Slot>> exportConetnt() {
+            int start = 0, end = 0;
+            if (headerReady) {
+                start = 1;
+            }
+            if (footerReady) {
+                end = groupList.size() - 1;
+            } else end = groupList.size();
+
+            LinkedHashMap<Slot, ArrayList<Slot>> exData = new LinkedHashMap();
+
+            for (int i = start; i < end; i++) {
+                exData.put(groupList.get(i).key, groupList.get(i).data);
+            }
+
+            return exData;
+
+        }
+
+        public void printself(String position) {
+            for (Group g : groupList) {
+                Log.d(position, "content manager   head " + g.head + " tail " + g.tail);
+                for (Slot s : g.data) {
+                    if (s.getDataReady())
+                        if (s.GetData() instanceof BarclaysAccount)
+                            Log.d(position, ((BarclaysAccount) s.GetData()).getSortingOrder());
+                        else if (s.GetData() instanceof String)
+                            Log.d(position, (String) s.GetData());
+
+                        else
+                            Log.d(position, "this is waiting or dummy slot!");
+
+
+                }
+            }
+            Log.d(position, "header area:" + headerArea + " footer area:" + footerArea);
+        }
+
+        @Override
+        public int getPosLowerBound(int position) {
+
+            for (int i = groupList.size() - 1; i >= 0; i--) {
+                if (groupList.get(i).head <= position) {
+
+                    return groupList.get(i).tail;
+                }
+
+            }
+            return -1;
+
+        }
+
+        public Group getGroup(int position) {
+            int start = 0, end = 0;
+            if (headerReady) {
+                start = 1;
+            }
+            if (footerReady) {
+                end = groupList.size() - 1;
+            } else end = groupList.size();
+
+            for (int i = end - 1; i >= start; i--) {
+                if (groupList.get(i).head == position)
+                    return groupList.get(i);
+            }
+
+            return null;
+        }
+
+        public Slot getKey(int position) {
+            for (int i = groupList.size() - 1; i >= 0; i--) {
+                if (groupList.get(i).head < position)
+                    return groupList.get(i).key;
+            }
+            return null;
+        }
+
+        @Override
+        public int getPosUpperBound(int position) {
+            for (int i = groupList.size() - 1; i >= 0; i--) {
+                if (groupList.get(i).head <= position) {
+
+                    return groupList.get(i).head;
+                }
+            }
+            return -1;
+
+        }
+
+        public void notifyItemRemove(int position, int length) {
+            if (position < footerArea && position > headerArea && contentReady) {
+                boolean start = false;
+                position--;
+                for (int i = 0; i < groupList.size(); i++) {
+                    Group g = groupList.get(i);
+                    if (start == false) {
+                        if (g.head == position) {
+                            start = true;
+                            g.tail -= length;
+                        }
+                    } else {
+                        g.head -= length;
+                        g.tail -= length;
+
+                    }
+                }
+                footerArea -= length;
+            }
+
+        }
+
+
+        @Override
+        public void notifyRemove(int position, int length) {
+
+            if (position <= headerArea && position >= 0 && headerReady) {
+                for (Group g : groupList) {
+                    g.head -= length;
+                    g.tail -= length;
+                }
+
+                headerArea -= length;
+                footerArea -= length;
+
+            } else if (position < footerArea && position > headerArea && contentReady) {
+                boolean start = false;
+                for (int i = 0; i < groupList.size(); i++) {
+                    Group g = groupList.get(i);
+                    if (start == false) {
+                        if (g.head == position) {
+                            start = true;
+                            groupList.remove(g);
+                            i--;
+                        }
+                    } else {
+                        g.head -= length;
+                        g.tail -= length;
+                    }
+                }
+                footerArea -= length;
+            } else if (position >= footerArea && footerReady) {
+                groupList.get(groupList.size() - 1).tail -= length;
+            }
+        }
+
+        @Override
+        public void notifyAdd(int position, int length, boolean fromAppend) {
+            if (fromAppend) {
+                if (position <= headerArea && headerReady) {
+                    for (Group g : groupList) {
+                        g.head += length;
+
+                        g.tail += length;
+                    }
+                    headerArea += length;
+                    footerArea += length;
+
+                } else if (position <= footerArea && position > headerArea && contentReady) {
+                    boolean start = false;
+                    position--;
+                    for (Group g : groupList) {
+                        if (start == false) {
+                            if (g.head == position) {
+                                start = true;
+                                g.tail += length;
+                            }
+                        } else {
+                            g.head += length;
+                            g.tail += length;
+                        }
+                    }
+                    footerArea += length;
+
+                } else if (position > footerArea && footerReady) {
+                    groupList.get(groupList.size() - 1).tail += length;
+                }
+            } else {
+                if (position <= headerArea && headerReady) {
+                    for (Group g : groupList) {
+                        g.head += length;
+
+                        g.tail += length;
+                    }
+                    headerArea += length;
+                    footerArea += length;
+
+                } else if (position < footerArea && position > headerArea && contentReady) {
+                    boolean start = false;
+                    position--;
+                    for (Group g : groupList) {
+                        if (start == false) {
+                            if (g.head == position) {
+                                start = true;
+                                g.tail += length;
+                            }
+                        } else {
+                            g.head += length;
+                            g.tail += length;
+                        }
+                    }
+                    footerArea += length;
+
+                } else if (position >= footerArea && footerReady) {
+                    groupList.get(groupList.size() - 1).tail += length;
+                }
+            }
+        }
+
+        public void ResetReservation(String oldReservation, String newReservation) {
+            if (headerReady) {
+                for (int i = 0; i < groupList.get(0).data.size(); i++)
+                    if (oldReservation.equalsIgnoreCase(groupList.get(0).data.get(i).getReserveCode())) {
+                        groupList.get(0).data.get(i).setReserveCode(newReservation);
+                    }
+            }
+
+            if (footerReady) {
+                int last = groupList.size() - 1;
+                for (int i = 0; i < groupList.get(last).data.size(); i++)
+                    if (oldReservation.equalsIgnoreCase(groupList.get(last).data.get(i).getReserveCode())) {
+                        groupList.get(last).data.get(i).setReserveCode(newReservation);
+                    }
+            }
+
+            int result = searchContent(oldReservation);
+            if (result != -1) {
+                groupList.get(result).key.setReserveCode(newReservation);
+            }
+        }
+
+
+        public void AppendData(String reservationCode, ArrayList<Slot> data) {
+            int result = searchContent(reservationCode);
+            if (result != -1) {
+                groupList.get(result).data.addAll(data);
+            }
+        }
+
+        private int searchContent(String reservationCode) {
+            int start = 0, end = 0;
+            if (headerReady) {
+                start = 1;
+            }
+            if (footerReady) {
+                end = groupList.size() - 1;
+            } else end = groupList.size();
+
+            for (int i = start; i < end; i++) {
+                Group g = groupList.get(i);
+
+                if (g.key.getReserveCode().equalsIgnoreCase(reservationCode))
+                    return i;
+            }
+            return -1;
+        }
+
+
+        public void ReplceData(String reservationCode, ArrayList<Slot> data) {
+            int result = searchHeader(reservationCode);
+            if (result != -1) {
+                groupList.get(0).data.addAll(result + 1, data);
+                groupList.get(0).data.remove(result);
+
+            } else {
+                result = searchFooter(reservationCode);
+                if (result != -1) {
+                    int last = groupList.size() - 1;
+                    groupList.get(last).data.addAll(result + 1, data);
+                    groupList.get(last).data.remove(result);
+
+                }
+            }
+        }
+
+        private int searchHeader(String reservationCode) {
+            if (headerReady) {
+                for (int i = 0; i < groupList.get(0).data.size(); i++) {
+                    if (groupList.get(0).data.get(i).getReserveCode().equalsIgnoreCase(reservationCode))
+                        return i;
+                }
+                return -1;
+            }
+
+            return -1;
+        }
+
+        private int searchFooter(String reservationCode) {
+            if (footerReady) {
+                int last = groupList.size() - 1;
+                for (int i = 0; i < groupList.get(last).data.size(); i++) {
+                    if (groupList.get(last).data.get(i).getReserveCode().equalsIgnoreCase(reservationCode))
+                        return i;
+                }
+                return -1;
+            }
+            return -1;
+
+        }
+
+    }
+
+    RecyclerView self;
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        this.self = recyclerView;
+        if (EnableDragNDrop) {
+            createDragSortRecycler(DragHandler);
+            self.addItemDecoration(this.dragSortRecycler);
+            self.addOnItemTouchListener(this.dragSortRecycler);
+            self.addOnScrollListener(this.dragSortRecycler.getScrollListener());
+        }
+    }
+
+
+    int DragHandler = -1;
+
+    public void setDragHandler(int handlerId) {
+        this.DragHandler = handlerId;
+    }
+
+    public int getDragHandler() {
+        return DragHandler;
+    }
+
+    DragSortRecycler dragSortRecycler;
+
+    @Override
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        if (this.EnableDragNDrop && DragHandler != -1) {
+            self.removeItemDecoration(this.dragSortRecycler);
+            self.removeOnItemTouchListener(this.dragSortRecycler);
+            self.removeOnScrollListener(this.dragSortRecycler.getScrollListener());
+        }
+    }
+
+    public void createDragSortRecycler(int dragHandler) {
+        dragSortRecycler = new DragSortRecycler();
+
+        dragSortRecycler.setGroupManager(groupManager);
+        dragSortRecycler.setViewHandleId(dragHandler); //View you wish to use as the handle
+
+
+        dragSortRecycler.setOnItemMovedListener(new OnItemMovedListener() {
+            @Override
+            public void onItemMoved(int from, int to) {
+
+///////////// store the dataset data into group manager data
+
+                if (from > headerArea && from < footerArea) {
+                    int start = groupManager.getPosUpperBound(from);
+                    int end = groupManager.getPosLowerBound(from) + 1;
+
+
+                    if (to >= end) {
+                        to = end - 1;
+                    } else if (to <= start) {
+                        to = start + 1;
+                    }
+
+                    if (ListenChange)
+                        recyclerListener.onItemMoved(from, to);
+
+                    Slot s = dataset.get(from);
+
+                    if (from < to) {
+                        for (int i = from; i < to; i++) {
+                            dataset.set(i, dataset.get(i + 1));
+                        }
+                        dataset.set(to, s);
+                    } else {
+                        for (int i = from; i > to; i--) {
+                            dataset.set(i, dataset.get(i - 1));
+                        }
+                        dataset.set(to, s);
+                    }
+                    notifyDataSetChanged();
+                } else if (from <= headerArea) {
+                    int start = -1;
+                    int end = headerArea + 1;
+
+
+                    if (to >= end) {
+                        to = end - 1;
+                    } else if (to <= start) {
+                        to = start + 1;
+                    }
+                    if (ListenChange)
+                        recyclerListener.onItemMoved(from, to);
+
+                    Slot s = dataset.get(from);
+
+                    if (from < to) {
+                        for (int i = from; i < to; i++) {
+                            dataset.set(i, dataset.get(i + 1));
+                        }
+                        dataset.set(to, s);
+                    } else {
+                        for (int i = from; i > to; i--) {
+                            dataset.set(i, dataset.get(i - 1));
+                        }
+                        dataset.set(to, s);
+                    }
+                    notifyDataSetChanged();
+                } else if (from >= footerArea) {
+                    int start = footerArea - 1;
+                    int end = dataset.size();
+
+
+                    if (to >= end) {
+                        to = end - 1;
+                    } else if (to <= start) {
+                        to = start + 1;
+                    }
+                    if (ListenChange)
+                        recyclerListener.onItemMoved(from, to);
+
+                    Slot s = dataset.get(from);
+
+                    if (from < to) {
+                        for (int i = from; i < to; i++) {
+                            dataset.set(i, dataset.get(i + 1));
+                        }
+                        dataset.set(to, s);
+                    } else {
+                        for (int i = from; i > to; i--) {
+                            dataset.set(i, dataset.get(i - 1));
+                        }
+                        dataset.set(to, s);
+                    }
+                    notifyDataSetChanged();
+                }
+///////////// store the dataset data into group manager data
+            }
+        });
+    }
+    //drag recycler//////////////////////////////////////////////////////////////////////////////
+    //  refer to: https://github.com/emileb/DragSortRecycler/tree/master/Library/src/main/java/com/emtronics/dragsortrecycler
+    //	 some alters are made by Chi.Zhang  Chi.Zhang2@barclayscapital.com
+
+    public interface OnItemMovedListener {
+        public void onItemMoved(int from, int to);
+    }
+
+    public interface OnDragStateChangedListener {
+        public void onDragStart();
+
+        public void onDragStop();
+    }
+
+    public class DragSortRecycler extends RecyclerView.ItemDecoration implements RecyclerView.OnItemTouchListener {
+
+        final String TAG = "DragSortRecycler";
+
+        final boolean DEBUG = false;
+
+        private int dragHandleWidth = 0;
+
+        private int selectedDragItemPos = -1;
+
+        private int fingerAnchorY;
+
+        private int fingerY;
+
+        private int fingerOffsetInViewY;
+
+        private float autoScrollWindow = 0.1f;
+        private float autoScrollSpeed = 0.5f;
+
+        private BitmapDrawable floatingItem;
+        private Rect floatingItemStatingBounds;
+        private Rect floatingItemBounds;
+
+
+        private float floatingItemAlpha = 0.5f;
+        private int floatingItemBgColor = 0;
+
+        private int viewHandleId = -1;
+
+
+        OnItemMovedListener moveInterface;
+
+        private boolean isDragging;
+        @Nullable
+        OnDragStateChangedListener dragStateChangedListener;
+
+        GroupManager gm;
+
+        public void setGroupManager(ContentManager g) {
+            this.gm = g;
+        }
+
+        public RecyclerView.OnScrollListener getScrollListener() {
+            return scrollListener;
+        }
+
+        /*
+         * Set the item move interface
+         */
+        public void setOnItemMovedListener(OnItemMovedListener swif) {
+            moveInterface = swif;
+        }
+
+        public void setViewHandleId(int id) {
+            viewHandleId = id;
+        }
+
+        public void setLeftDragArea(int w) {
+            dragHandleWidth = w;
+        }
+
+        public void setFloatingAlpha(float a) {
+            floatingItemAlpha = a;
+        }
+
+        public void setFloatingBgColor(int c) {
+            floatingItemBgColor = c;
+        }
+
+        /*
+         Set the window at top and bottom of list, must be between 0 and 0.5
+         For example 0.1 uses the top and bottom 10% of the lists for scrolling
+         */
+        public void setAutoScrollWindow(float w) {
+            autoScrollWindow = w;
+        }
+
+        /*
+        Set the autoscroll speed, default is 0.5
+         */
+        public void setAutoScrollSpeed(float speed) {
+            autoScrollSpeed = speed;
+        }
+
+        @Override
+        public void getItemOffsets(Rect outRect, View view, RecyclerView rv, RecyclerView.State state) {
+            super.getItemOffsets(outRect, view, rv, state);
+            if (selectedDragItemPos != -1) {
+                int itemPos = rv.getChildPosition(view);
+
+                if (!canDragOver(itemPos)) {
+                    return;
+                }
+
+                //Movement of finger
+                float totalMovement = fingerY - fingerAnchorY;
+
+                if (itemPos == selectedDragItemPos) {
+                    view.setVisibility(View.INVISIBLE);
+                } else {
+                    //Make view visible incase invisible
+                    view.setVisibility(View.VISIBLE);
+
+                    //Find middle of the floatingItem
+                    float floatMiddleY = floatingItemBounds.top + floatingItemBounds.height() / 2;
+
+                    //Moving down the list
+                    //These will auto-animate if the device continually sends touch motion events
+                    // if (totalMovment>0)
+                    {
+                        if ((itemPos > selectedDragItemPos) && (view.getTop() < floatMiddleY)) {
+                            float amountUp = (floatMiddleY - view.getTop()) / (float) view.getHeight();
+                            //  amountUp *= 0.5f;
+                            if (amountUp > 1)
+                                amountUp = 1;
+                            ////this is the key for disactiviting the animation
+                            ////this is the key for disactiviting the animation
+                            ////this is the key for disactiviting the animation
+
+                            //if selectedDragItemPos <= HeaderArea
+                            //if selectDragItemPos >= FooterArea
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                            if (selectedDragItemPos < footerArea && selectedDragItemPos > headerArea) {
+
+                                if (itemPos < footerArea && itemPos > headerArea) {
+                                    if (itemPos < gm.getPosLowerBound(selectedDragItemPos) + 1 && itemPos > gm.getPosUpperBound(selectedDragItemPos)) {
+                                        outRect.top = -(int) (floatingItemBounds.height() * amountUp);
+                                        outRect.bottom = (int) (floatingItemBounds.height() * amountUp);
+                                    }
+                                }
+                            } else if (selectedDragItemPos > -1 && selectedDragItemPos < headerArea + 1) {
+                                if (itemPos > -1 && itemPos < headerArea + 1) {
+                                    outRect.top = -(int) (floatingItemBounds.height() * amountUp);
+                                    outRect.bottom = (int) (floatingItemBounds.height() * amountUp);
+                                }
+                            } else if (selectedDragItemPos > footerArea - 1 && selectedDragItemPos < dataset.size()) {
+
+                                if (itemPos > footerArea - 1 && itemPos < dataset.size()) {
+                                    outRect.top = -(int) (floatingItemBounds.height() * amountUp);
+                                    outRect.bottom = (int) (floatingItemBounds.height() * amountUp);
+                                }
+                            }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                        }
+                    }//Moving up the list
+                    // else if (totalMovment < 0)
+                    {
+                        if ((itemPos < selectedDragItemPos) && (view.getBottom() > floatMiddleY)) {
+                            float amountDown = ((float) view.getBottom() - floatMiddleY) / (float) view.getHeight();
+                            //  amountDown *= 0.5f;
+                            if (amountDown > 1)
+                                amountDown = 1;
+
+
+                            if (selectedDragItemPos < footerArea && selectedDragItemPos > headerArea) {
+                                if (itemPos < footerArea && itemPos > headerArea) {
+                                    if (itemPos < gm.getPosLowerBound(selectedDragItemPos) + 1 && itemPos > gm.getPosUpperBound(selectedDragItemPos)) {
+
+                                        outRect.top = (int) (floatingItemBounds.height() * amountDown);
+                                        outRect.bottom = -(int) (floatingItemBounds.height() * amountDown);
+
+                                    }
+                                }
+                            } else if (selectedDragItemPos > -1 && selectedDragItemPos < headerArea + 1) {
+                                if (itemPos > -1 && itemPos < headerArea + 1) {
+                                    outRect.top = (int) (floatingItemBounds.height() * amountDown);
+                                    outRect.bottom = -(int) (floatingItemBounds.height() * amountDown);
+                                }
+                            } else if (selectedDragItemPos > footerArea - 1 && selectedDragItemPos < dataset.size()) {
+                                if (itemPos > footerArea - 1 && itemPos < dataset.size()) {
+                                    outRect.top = (int) (floatingItemBounds.height() * amountDown);
+                                    outRect.bottom = -(int) (floatingItemBounds.height() * amountDown);
+                                }
+                            }
+                            //work sprout  //work sprout  //work sprout  //work sprout  //work sprout  //work sprout  //work sprout  //work sprout
+                            ////this is the key for disactiviting the animation
+                            ////this is the key for disactiviting the animation
+                            ////this is the key for disactiviting the animation
+                        }
+                    }
+                }
+            } else {
+                outRect.top = 0;
+                outRect.bottom = 0;
+                //Make view visible incase invisible
+                view.setVisibility(View.VISIBLE);
+            }
+        }
+
+        /**
+         * Find the new position by scanning through the items on
+         * screen and finding the positional relationship.
+         * This *seems* to work, another method would be to use
+         * getItemOffsets, but I think that could miss items?..
+         */
+        private int getNewPostion(RecyclerView rv) {
+            int itemsOnScreen = rv.getLayoutManager().getChildCount();
+
+            float floatMiddleY = floatingItemBounds.top + floatingItemBounds.height() / 2;
+
+            int above = 0;
+            int below = Integer.MAX_VALUE;
+            for (int n = 0; n < itemsOnScreen; n++) //Scan though items on screen, however they may not
+            {                                   // be in order!
+
+                View view = rv.getLayoutManager().getChildAt(n);
+
+                if (view.getVisibility() != View.VISIBLE)
+                    continue;
+
+                int itemPos = rv.getChildPosition(view);
+
+                if (itemPos == selectedDragItemPos) //Don't check against itself!
+                    continue;
+
+                float viewMiddleY = view.getTop() + view.getHeight() / 2;
+                if (floatMiddleY > viewMiddleY) //Is above this item
+                {
+                    if (itemPos > above)
+                        above = itemPos;
+                } else if (floatMiddleY <= viewMiddleY) //Is below this item
+                {
+                    if (itemPos < below)
+                        below = itemPos;
+                }
+            }
+//       debugLog("above = " + above + " below = " + below);
+
+            if (below != Integer.MAX_VALUE) {
+                if (below < selectedDragItemPos) //Need to count itself
+                    below++;
+                return below - 1;
+            } else {
+                if (above < selectedDragItemPos)
+                    above++;
+
+                return above;
+            }
+        }
+
+
+        @Override
+        public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+//      debugLog("onInterceptTouchEvent");
+
+            //if (e.getAction() == MotionEvent.ACTION_DOWN)
+            {
+                View itemView = rv.findChildViewUnder(e.getX(), e.getY());
+
+                if (itemView == null)
+                    return false;
+
+                boolean dragging = false;
+
+                if ((dragHandleWidth > 0) && (e.getX() < dragHandleWidth)) {
+                    dragging = true;
+                } else if (viewHandleId != -1) {
+                    //Find the handle in the list item
+                    View handleView = itemView.findViewById(viewHandleId);
+
+                    if (handleView == null) {
+                        //Log.e(TAG, "The view ID " + viewHandleId + " was not found in the RecycleView item");
+                        return false;
+                    }
+
+                    //View should be visible to drag
+                    if (handleView.getVisibility() != View.VISIBLE) {
+                        return false;
+                    }
+
+                    //We need to find the relative position of the handle to the parent view
+                    //Then we can work out if the touch is within the handle
+                    int[] parentItemPos = new int[2];
+                    itemView.getLocationInWindow(parentItemPos);
+
+                    int[] handlePos = new int[2];
+                    handleView.getLocationInWindow(handlePos);
+
+                    int xRel = handlePos[0] - parentItemPos[0];
+                    int yRel = handlePos[1] - parentItemPos[1];
+
+                    Rect touchBounds = new Rect(itemView.getLeft() + xRel, itemView.getTop() + yRel,
+                            itemView.getLeft() + xRel + handleView.getWidth(),
+                            itemView.getTop() + yRel + handleView.getHeight()
+                    );
+
+                    if (touchBounds.contains((int) e.getX(), (int) e.getY()))
+                        dragging = true;
+
+//               debugLog("parentItemPos = " + parentItemPos[0] + " " + parentItemPos[1]);
+//               debugLog("handlePos = " + handlePos[0] + " " + handlePos[1]);
+                }
+
+
+                if (dragging) {
+//               debugLog("Started Drag");
+
+                    setIsDragging(true);
+
+                    floatingItem = createFloatingBitmap(itemView);
+
+                    fingerAnchorY = (int) e.getY();
+                    fingerOffsetInViewY = fingerAnchorY - itemView.getTop();
+                    fingerY = fingerAnchorY;
+
+                    selectedDragItemPos = rv.getChildPosition(itemView);
+//               debugLog("selectedDragItemPos = " + selectedDragItemPos);
+
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public void onTouchEvent(RecyclerView rv, MotionEvent e) {
+//       debugLog("onTouchEvent");
+
+            if ((e.getAction() == MotionEvent.ACTION_UP) ||
+                    (e.getAction() == MotionEvent.ACTION_CANCEL)) {
+                if ((e.getAction() == MotionEvent.ACTION_UP) && selectedDragItemPos != -1) {
+                    int newPos = getNewPostion(rv);
+                    if (moveInterface != null)
+                        moveInterface.onItemMoved(selectedDragItemPos, newPos);
+                }
+
+                setIsDragging(false);
+                selectedDragItemPos = -1;
+                floatingItem = null;
+                rv.invalidateItemDecorations();
+                return;
+            }
+
+
+            fingerY = (int) e.getY();
+
+            if (floatingItem != null) {
+                floatingItemBounds.top = fingerY - fingerOffsetInViewY;
+
+                if (floatingItemBounds.top < -floatingItemStatingBounds.height() / 2) //Allow half the view out the top
+                    floatingItemBounds.top = -floatingItemStatingBounds.height() / 2;
+
+
+                floatingItemBounds.bottom = floatingItemBounds.top + floatingItemStatingBounds.height();
+
+                floatingItem.setBounds(floatingItemBounds);
+
+
+            }
+
+            //Do auto scrolling at end of list
+            float scrollAmount = 0;
+            if (fingerY > (rv.getHeight() * (1 - autoScrollWindow))) {
+                scrollAmount = (fingerY - (rv.getHeight() * (1 - autoScrollWindow)));
+            } else if (fingerY < (rv.getHeight() * autoScrollWindow)) {
+                scrollAmount = (fingerY - (rv.getHeight() * autoScrollWindow));
+            }
+//       debugLog("Scroll: " + scrollAmount);
+
+            scrollAmount *= autoScrollSpeed;
+            rv.scrollBy(0, (int) scrollAmount);
+
+            rv.invalidateItemDecorations();// Redraw
+        }
+
+        public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+        }
+
+        private void setIsDragging(final boolean dragging) {
+            if (dragging != isDragging) {
+                isDragging = dragging;
+                if (dragStateChangedListener != null) {
+                    if (isDragging) {
+                        dragStateChangedListener.onDragStart();
+                    } else {
+                        dragStateChangedListener.onDragStop();
+                    }
+                }
+            }
+        }
+
+        public void setOnDragStateChangedListener(final OnDragStateChangedListener dragStateChangedListener) {
+            this.dragStateChangedListener = dragStateChangedListener;
+        }
+
+
+        Paint bgColor = new Paint();
+
+        @Override
+        public void onDrawOver(Canvas c, RecyclerView parent, RecyclerView.State state) {
+            if (floatingItem != null) {
+
+                floatingItem.setAlpha((int) (255 * floatingItemAlpha));
+                bgColor.setColor(floatingItemBgColor);
+                c.drawRect(floatingItemBounds, bgColor);
+                floatingItem.draw(c);
+            }
+        }
+
+        RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+//           debugLog("Scrolled: " + dx + " " + dy);
+                fingerAnchorY -= dy;
+            }
+        };
+
+        /**
+         * if(selectedDragItemPos<gm.getPosLowerBound(selectedDragItemPos)&&selectedDragItemPos>gm.getPosUpperBound(selectedDragItemPos))
+         *
+         * @param position
+         * @return True if we can drag the item over this position, False if not.
+         */
+        protected boolean canDragOver(int position) {
+
+            return true;
+        }
+
+
+        private BitmapDrawable createFloatingBitmap(View v) {
+            floatingItemStatingBounds = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
+            floatingItemBounds = new Rect(floatingItemStatingBounds);
+
+            Bitmap bitmap = Bitmap.createBitmap(floatingItemStatingBounds.width(),
+                    floatingItemStatingBounds.height(), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            v.draw(canvas);
+
+            BitmapDrawable retDrawable = new BitmapDrawable(v.getResources(), bitmap);
+            retDrawable.setBounds(floatingItemBounds);
+
+            return retDrawable;
+        }
+    }
+
+    //operation region////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public recyclerBehaviorListener recyclerListener;
+
+    public recyclerBehaviorListener getRecyclerListener() {
+        return recyclerListener;
+    }
+
+    public interface recyclerBehaviorListener {
+        void onRemoveSelf(int position);
+
+        void onAddData(int position, ArrayList<Slot> data);
+
+        void onItemMoved(int from, int to);
+
+        void onResetReservation(String oldCode, int position, String newCode);
+
+        void onRemoveItem(int position, int length);
+
+        void custom(String s);
+
+    }
+
+    public void AddData(int position, ArrayList<Slot> data, boolean fromAppend) {
+        if (data.size() != 0) {
+            if (position < 0) {
+                dataset.addAll(0, data);
+                notifyItemRangeInserted(0, data.size());
+                groupManager.notifyAdd(position, data.size(), fromAppend);
+
+                if (ListenChange)
+                    recyclerListener.onAddData(0, data);
+            } else {
+                dataset.addAll(position, data);
+                notifyItemRangeInserted(position, data.size());
+                groupManager.notifyAdd(position, data.size(), fromAppend);
+
+                if (ListenChange)
+                    recyclerListener.onAddData(position, data);
+            }
+        }
+    }
+
+    public void RemoveSelf(int position) {
+        int end = position + 1;
+        for (int i = position; i < end; end--) {
+            dataset.remove(i);
+
+            if (ListenChange)
+                recyclerListener.onRemoveSelf(i);
+        }
+        notifyItemRangeRemoved(position, 1);
+        groupManager.notifyRemove(position, 1);
+
+    }
+
+    public void RemoveItem(int position, int length) {
+        if (length != 0) {
+            int end = position + length;
+            GroupManager.Group g = groupManager.getGroup(position - 1);
+            g.data.clear();
+            ;
+            for (int i = position; i < end; end--) {
+                g.data.add(dataset.get(i));
+                dataset.remove(i);
+            }
+            if (ListenChange)
+                recyclerListener.onRemoveItem(position, length);
+
+            notifyItemRangeRemoved(position, length);
+            groupManager.notifyItemRemove(position, length);
+        }
+    }
+
+    synchronized public void ResetReservation(String oldReseravation, String newReservation) {
+        for (int i = 0; i < dataset.size(); i++) {
+            Slot s = dataset.get(i);
+            if (s.isReserved() && oldReseravation.equalsIgnoreCase(s.getReserveCode())) {
+                s.setReserveCode(newReservation);
+
+                if (ListenChange) {
+                    recyclerListener.onResetReservation(oldReseravation, i, newReservation);
+                }
+            }
+
+        }
+        groupManager.ResetReservation(oldReseravation, newReservation);
+    }
+
+    synchronized public void ReplaceData(String reserveCode, ArrayList<Slot> data) {
+        for (int i = 0; i < dataset.size(); i++) {
+            Slot s = dataset.get(i);
+            if (s.isReserved() && reserveCode.equalsIgnoreCase(s.getReserveCode())) {
+                RemoveSelf(i);
+                AddData(i, data, false);
+            }
+        }
+        groupManager.ReplceData(reserveCode, data);
+
+    }
+
+    synchronized public void AppendData(String reserveCode, ArrayList<Slot> data) {
+        for (int i = 0; i < dataset.size(); i++) {
+            Slot s = dataset.get(i);
+            if (s.isReserved() && reserveCode.equalsIgnoreCase(s.getReserveCode())) {
+                if (groupManager.getGroup(i).expanded)
+                    AddData(i + 1, data, true);
+            }
+        }
+        groupManager.AppendData(reserveCode, data);
+    }
+
+    //util region////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    public void printdataset() {
+    }
+
+    public ArrayList<Slot> ExportHeader() {
+        return groupManager.exportHeader().data;
+    }
+
+    public ArrayList<Slot> ExportFooter() {
+        return groupManager.exportFooter().data;
+    }
+
+    public LinkedHashMap<Slot, ArrayList<Slot>> ExportContent() {
+        return groupManager.exportConetnt();
+    }
+
+    public LinkedHashMap<Slot, ArrayList<Slot>> SmartExportContent() {
+        LinkedHashMap<Slot, ArrayList<Slot>> data = new LinkedHashMap<Slot, ArrayList<Slot>>();
+
+        for (int i = 0; i < dataset.size(); i++) {
+            Slot s = dataset.get(i);
+            if (s.GetData() instanceof BMBGroup) {
+                GroupManager.Group g = groupManager.getGroup(i);
+                if (g != null) {
+                    if (g.expanded) {
+                        ArrayList<Slot> placeHolder = new ArrayList<>();
+                        for(int j=g.head;j<=g.tail;j++)
+                        {
+                            placeHolder.add(dataset.get(j));
+                        }
+                            data.put(s,placeHolder);
+                    } else {
+                        data.put(s,g.data);
+                    }
+                }
+            }
+        }
+        return data;
+    }
+
+    public void syncView() {
+        syncViewHeader();
+        syncViewContent();
+        syncViewFooter();
+
+    }
+
+    public void syncViewHeader() {
+        if (headerReady) {
+
+            for (int j = 0; j <= headerArea; j++) {
+                dataset.remove(j);
+            }
+
+            for (int i = groupManager.groupList.get(0).data.size(); i >= 0; i--) {
+                dataset.add(0, groupManager.groupList.get(0).data.get(i));
+            }
+            int difference = groupManager.groupList.get(0).data.size() - headerArea;
+            headerArea = groupManager.groupList.get(0).data.size() - 1;
+            footerArea = footerArea + difference;
+            notifyDataSetChanged();
+        }
+    }
+
+    public void syncManagerHeader() {
+        if (headerReady) {
+            groupManager.groupList.get(0).key = null;
+            groupManager.groupList.get(0).data.clear();
+
+            groupManager.groupList.get(0).key = dataset.get(0);
+            groupManager.groupList.get(0).data.addAll(dataset.subList(0, headerArea + 1));
+
+            groupManager.groupList.get(0).head = 0;
+            groupManager.groupList.get(0).tail = headerArea;
+        }
+    }
+
+    public void syncManagerFooter() {
+        if (footerReady) {
+            int last = groupManager.groupList.size() - 1;
+
+            groupManager.groupList.get(last).key = null;
+            groupManager.groupList.get(last).data.clear();
+
+            groupManager.groupList.get(last).key = dataset.get(footerArea);
+            groupManager.groupList.get(last).data.addAll(dataset.subList(footerArea, dataset.size()));
+
+            groupManager.groupList.get(0).head = footerArea;
+            groupManager.groupList.get(0).tail = dataset.size() - 1;
+
+        }
+    }
+    //there is no way to build a syncContent
+
+    public ArrayList<Slot> getCurrentDataSet() {
+        return dataset;
+    }
+
+    public void syncViewContent() {
+        if (contentReady) {
+            for (int i = headerArea + 1; i < footerArea; i++) {
+                dataset.remove(i);
+            }
+            int start = 0, end = 0;
+            if (headerReady) {
+                start = 0;
+
+            } else {
+                start = -1;
+            }
+            if (footerReady) {
+                end = groupManager.groupList.size() - 2;
+            } else end = groupManager.groupList.size() - 1;
+
+            for (int j = end; j > start; j--) {
+                dataset.addAll(start + 1, groupManager.groupList.get(j).data);
+                dataset.add(start + 1, groupManager.groupList.get(j).key);
+            }
+            notifyDataSetChanged();
+        }
+    }
+
+    public void syncViewFooter() {
+        if (footerReady) {
+
+            for (int j = footerArea; j <= dataset.size(); j++) {
+                dataset.remove(j);
+            }
+            int last = groupManager.groupList.size() - 1;
+
+            for (int i = groupManager.groupList.get(last).data.size(); i >= 0; i--) {
+                dataset.add(footerArea, groupManager.groupList.get(last).data.get(i));
+            }
+            notifyDataSetChanged();
+        }
+
+    }
+
+}
