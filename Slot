@@ -1,0 +1,192 @@
+
+/**
+ * Created by zhangch6 on 6/30/2015.
+ */
+
+import android.view.View.OnClickListener;
+
+public class Slot<T1,T2> {
+
+    private T1 data = null;
+    private int layout = 0;
+    private OnClickListener event = null;
+    private Status status = new Status();
+    private String ReserveCode="";
+    private T2 operationData = null;
+
+    public Slot(){}
+
+    public Slot(String reserveInfo)
+    {
+        this.ReserveCode = reserveInfo;
+        status.Reserved=true;
+    }
+
+    public Slot(T1 d,int id,OnClickListener e){
+        if(d!=null) {
+            this.data = d;
+            this.status.DataReady = true;
+        }
+
+        this.layout = id;
+        this.status.LayoutReady = true;
+
+        if(e!=null) {
+            this.event = e;
+            this.status.EventReady = true;
+        }
+    }
+
+    public Slot(T1 d,int id,OnClickListener e,T2 opd)
+    {
+        if(d!=null) {
+            this.data = d;
+            this.status.DataReady = true;
+        }
+
+        this.layout = id;
+        this.status.LayoutReady = true;
+
+        if(e!=null) {
+            this.event = e;
+            this.status.EventReady = true;
+        }
+
+        if(opd!=null) {
+            operationData = opd;
+            this.status.HasOperation = true;
+        }
+    }
+
+
+
+    public void setOperationData(T2 x)
+    {
+        if(x != null) {
+            operationData = x;
+            this.status.HasOperation = true;
+        }else
+        {
+            operationData = null;
+            this.status.HasOperation = false;
+        }
+    }
+
+    public T2 getOperationData()
+    {return operationData;}
+
+
+
+
+    public boolean equals(Slot s)
+    {
+        if( data.equals(s.data) && layout == s.layout)
+            return true;
+        else
+            return false;
+    }
+
+    public void SetData(T1 d)
+    {
+        if(d!=null)
+        {
+            this.data = d;
+            this.status.DataReady= true;
+        }
+        else
+        {
+            this.data = null;
+            this.status.DataReady = false;
+        }
+
+    }
+    public T1 GetData()
+    {
+        return data;
+    }
+
+    public void SetLayout(int id)
+    {
+        if(id!=0)
+        {
+            this.layout = id;
+            this.status.LayoutReady = true;
+        }
+        else
+        {
+            this.layout = 0;
+            this.status.LayoutReady = false;
+        }
+    }
+    public int GetLayout()
+    {
+        return this.layout;
+    }
+
+    public void SetEvent(OnClickListener e)
+    {
+        if(e!=null)
+        {
+            this.event = e;
+            this.status.EventReady = true;
+        }
+        else
+        {
+            this.event = null;
+            this.status.EventReady = false;
+        }
+    }
+    public OnClickListener getEvent()
+    {
+        return this.event;
+    }
+
+    public boolean pass()
+    {
+        return status.DataReady&&status.LayoutReady;
+    }
+
+    public boolean getDataReady()
+    {
+        return status.DataReady;
+    }
+    public boolean getLayoutReady()
+    {
+        return status.LayoutReady;
+    }
+    public boolean getEventReady()
+    {
+        return status.EventReady;
+    }
+    public boolean isReserved()
+    {
+        return status.Reserved;
+    }
+    public void setReserveCode(String reserveCode)
+    {
+        if(reserveCode!=null) {
+            this.ReserveCode = reserveCode;
+            status.Reserved = true;
+        }
+        else
+        {
+            this.ReserveCode = null;
+            status.Reserved = false;
+        }
+    }
+    public String getReserveCode()
+    {
+        return this.ReserveCode;
+    }
+
+    private class Status
+    {
+        boolean DataReady = false;
+        boolean LayoutReady = false;
+        boolean EventReady = false;
+        boolean Reserved = false;
+        boolean HasOperation = false;
+    }
+
+
+}
