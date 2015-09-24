@@ -1,0 +1,75 @@
+ufferedReader streamReader = new BufferedReader(new InputStreamReader(in, "UTF-8")); 
+StringBuilder responseStrBuilder = new StringBuilder();
+
+String inputStr;
+while ((inputStr = streamReader.readLine()) != null)
+    responseStrBuilder.append(inputStr);
+new JSONObject(responseStrBuilder.toString());
+
+
+
+public class ImageCache extends LruCache<String, Bitmap> {
+ 
+  public ImageCache( int maxSize ) {
+    super( maxSize );
+  }
+ 
+  @Override
+  protected int sizeOf( String key, Bitmap value ) {
+    return value.getByteCount();
+  }
+ 
+  @Override
+  protected void entryRemoved( boolean evicted, String key, Bitmap oldValue, Bitmap newValue ) {
+    oldValue.recycle();
+  }
+ 
+}
+
+
+int memClass = ( ( ActivityManager )activity.getSystemService( Context.ACTIVITY_SERVICE ) ).getMemoryClass();
+int cacheSize = 1024 * 1024 * memClass / 8;
+LruCache cache = new LruCache<String, Bitmap>( cacheSize );
+
+
+
+URLConnection conn = new URL( url ).openConnection();
+conn.connect();
+return BitmapFactory.decodeStream( conn.getInputStream() );
+
+
+
+FileOutputStream out = null;
+try {
+    out = new FileOutputStream(filename);
+    bmp.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+    // PNG is a lossless format, the compression factor (100) is ignored
+} catch (Exception e) {
+    e.printStackTrace();
+} finally {
+    try {
+        if (out != null) {
+            out.close();
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+int screenSize = getResources().getConfiguration().screenLayout &
+        Configuration.SCREENLAYOUT_SIZE_MASK;
+
+String toastMsg;
+switch(screenSize) {
+    case Configuration.SCREENLAYOUT_SIZE_LARGE:
+        toastMsg = "Large screen";
+        break;
+    case Configuration.SCREENLAYOUT_SIZE_NORMAL:
+        toastMsg = "Normal screen";
+        break;
+    case Configuration.SCREENLAYOUT_SIZE_SMALL:
+        toastMsg = "Small screen";
+        break;
+    default:
+        toastMsg = "Screen size is neither large, normal or small";
+}
